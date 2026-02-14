@@ -29,18 +29,16 @@ export default function Sidebar() {
             <Link
               key={name}
               href={href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
-                isActive
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
                   ? "bg-blue-50 text-blue-600 shadow-sm"
                   : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-              }`}
+                }`}
             >
               <Icon
                 size={22}
                 strokeWidth={isActive ? 2.5 : 2}
-                className={`transition-transform duration-200 ${
-                  isActive ? "scale-110" : "group-hover:scale-110"
-                }`}
+                className={`transition-transform duration-200 ${isActive ? "scale-110" : "group-hover:scale-110"
+                  }`}
               />
               <span className={`font-medium ${isActive ? "font-semibold" : ""}`}>
                 {label}

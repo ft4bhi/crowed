@@ -12,25 +12,25 @@ const filters = ["All", "Cows", "Buffalos", "Bulls", "Male Buffalo", "High Yield
 
 export default function FilterBar({ onOpenFilters, activeFilter, onFilterSelect }: FilterBarProps) {
     return (
-        <div className="sticky top-14 md:top-0 z-30 glass-nav shadow-sm">
-            <div className="flex items-center gap-3 px-4 py-3 overflow-x-auto no-scrollbar">
+        <div className="sticky top-14 md:top-0 z-30 py-3">
+            <div className="flex items-center gap-3 px-4 overflow-x-auto no-scrollbar">
                 <button
                     onClick={onOpenFilters}
-                    className="flex items-center gap-2 px-4 py-2 glass-button rounded-lg transition-colors flex-shrink-0"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50/80 backdrop-blur-xl border border-emerald-100/50 rounded-full transition-all flex-shrink-0 text-emerald-900 hover:bg-emerald-100 hover:shadow-sm active:scale-95"
                 >
-                    <SlidersHorizontal size={16} className="text-neutral-700" />
-                    <span className="text-sm font-semibold text-neutral-700">Filters</span>
+                    <SlidersHorizontal size={18} className="text-emerald-700" />
+                    <span className="text-sm font-bold text-emerald-800">Filters</span>
                 </button>
 
-                <div className="h-6 w-px bg-neutral-400/30 mx-1 flex-shrink-0" />
+                <div className="h-6 w-px bg-emerald-200/50 mx-1 flex-shrink-0" />
 
                 {filters.map((filter) => (
                     <button
                         key={filter}
                         onClick={() => onFilterSelect(filter)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 border ${activeFilter === filter
-                            ? "bg-neutral-900/80 backdrop-blur-md text-white shadow-lg border-neutral-900/0 ring-1 ring-white/20"
-                            : "glass text-neutral-700 hover:bg-white/50 border-white/40"
+                        className={`px-5 py-2 rounded-full text-sm font-semibold transition-all whitespace-nowrap flex-shrink-0 border shadow-sm ${activeFilter === filter
+                            ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20 active:scale-95"
+                            : "bg-white/40 backdrop-blur-md border-white/60 text-emerald-900 hover:bg-emerald-50 hover:border-emerald-200"
                             }`}
                     >
                         {filter}

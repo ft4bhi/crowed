@@ -123,7 +123,7 @@ export default function SellPage() {
                     {/* Media Section */}
                     <div ref={scrollRefs.media} className="glass-card p-6 space-y-4">
                         <h2 className="text-lg font-bold flex items-center gap-2 text-gray-800">
-                            <Video className="w-5 h-5 text-blue-600" /> Media Upload
+                            <Video className="w-5 h-5 text-emerald-600" /> Media Upload
                         </h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -148,7 +148,7 @@ export default function SellPage() {
                     {/* Basic Info */}
                     <div ref={scrollRefs.details} className="glass-card p-6 space-y-4">
                         <h2 className="text-lg font-bold flex items-center gap-2 text-gray-800">
-                            <Info className="w-5 h-5 text-blue-600" /> Animal Details
+                            <Info className="w-5 h-5 text-emerald-600" /> Animal Details
                         </h2>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -236,7 +236,7 @@ export default function SellPage() {
                             type="button"
                             onClick={detectLocation}
                             disabled={locationLoading}
-                            className="w-full py-3 bg-blue-100/50 backdrop-blur-md text-blue-700 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-200/50 transition-colors border border-blue-200/50"
+                            className="w-full py-3 bg-emerald-100/50 backdrop-blur-md text-emerald-700 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-200/50 transition-colors border border-emerald-200/50"
                         >
                             {locationLoading ? <Loader2 className="animate-spin w-5 h-5" /> : <MapPin className="w-5 h-5" />}
                             {locationLoading ? "Detecting..." : "Auto-detect GPS Location"}

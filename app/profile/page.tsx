@@ -97,7 +97,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="w-20 h-20 rounded-full glass flex items-center justify-center text-3xl font-bold text-blue-700 shadow-md border-2 border-white/50">
+          <div className="w-20 h-20 rounded-full glass flex items-center justify-center text-3xl font-bold text-emerald-700 shadow-md border-2 border-white/50">
             {mockUser.name[0]}
           </div>
           <div>
@@ -116,9 +116,9 @@ export default function ProfilePage() {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mt-8">
-          <div className="bg-blue-100/40 backdrop-blur-sm p-4 rounded-xl text-center border border-blue-200/50">
-            <p className="text-blue-700 font-bold text-xl">{mockUser.stats.activeListings}</p>
-            <p className="text-blue-700/80 text-xs font-bold uppercase tracking-wide">Active</p>
+          <div className="bg-emerald-100/40 backdrop-blur-sm p-4 rounded-xl text-center border border-emerald-200/50">
+            <p className="text-emerald-700 font-bold text-xl">{mockUser.stats.activeListings}</p>
+            <p className="text-emerald-700/80 text-xs font-bold uppercase tracking-wide">Active</p>
           </div>
           <div className="bg-green-100/40 backdrop-blur-sm p-4 rounded-xl text-center border border-green-200/50">
             <p className="text-green-700 font-bold text-xl">{mockUser.stats.sold}</p>
@@ -137,19 +137,19 @@ export default function ProfilePage() {
           <Tabs.List className="flex gap-2 mb-6 overflow-x-auto pb-2 border-b border-gray-200/30 no-scrollbar">
             <Tabs.Trigger
               value="active"
-              className={`px-4 py-2.5 text-sm font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'active' ? 'bg-black/80 backdrop-blur-md text-white shadow-lg' : 'glass text-gray-600 hover:bg-white/40'}`}
+              className={`px-4 py-2.5 text-sm font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'active' ? 'bg-emerald-600 text-white shadow-lg' : 'glass text-gray-600 hover:bg-white/40'}`}
             >
               <Grid className="w-4 h-4" /> Active ({activeListings.length})
             </Tabs.Trigger>
             <Tabs.Trigger
               value="sold"
-              className={`px-4 py-2.5 text-sm font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'sold' ? 'bg-black/80 backdrop-blur-md text-white shadow-lg' : 'glass text-gray-600 hover:bg-white/40'}`}
+              className={`px-4 py-2.5 text-sm font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'sold' ? 'bg-emerald-600 text-white shadow-lg' : 'glass text-gray-600 hover:bg-white/40'}`}
             >
               <CheckCircle className="w-4 h-4" /> Sold ({soldListings.length})
             </Tabs.Trigger>
             <Tabs.Trigger
               value="drafts"
-              className={`px-4 py-2.5 text-sm font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'drafts' ? 'bg-black/80 backdrop-blur-md text-white shadow-lg' : 'glass text-gray-600 hover:bg-white/40'}`}
+              className={`px-4 py-2.5 text-sm font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'drafts' ? 'bg-emerald-600 text-white shadow-lg' : 'glass text-gray-600 hover:bg-white/40'}`}
             >
               <FileText className="w-4 h-4" /> Drafts ({draftListings.length})
             </Tabs.Trigger>

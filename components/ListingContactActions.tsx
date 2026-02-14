@@ -27,7 +27,7 @@ export default function ListingContactActions({ phone, whatsappNumber, listingTi
                 onClick={handleCall}
                 className="flex-1 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-md border border-white/60 py-3.5 rounded-full font-bold text-gray-900 shadow-xl shadow-black/10 hover:bg-white active:scale-95 transition-all"
             >
-                <Phone className="w-5 h-5 text-blue-600" />
+                <Phone className="w-5 h-5 text-emerald-600" />
                 <span className="text-sm">Call</span>
             </button>
 

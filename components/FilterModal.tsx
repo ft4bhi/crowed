@@ -1,7 +1,8 @@
 "use client";
 
 import { X, ChevronDown, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface FilterModalProps {
@@ -23,6 +24,11 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
     locationRadius: 50,
     sortBy: "Latest",
   });
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const toggleSelection = (category: keyof typeof filters, value: string) => {
     setFilters((prev) => {
@@ -36,9 +42,9 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
     });
   };
 
-  if (!isOpen) return null;
+  if (!mounted) return null;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -47,14 +53,14 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 z-[9999] backdrop-blur-sm"
           />
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl rounded-t-3xl z-50 h-[85vh] flex flex-col md:max-w-md md:left-1/2 md:-translate-x-1/2 md:h-[600px] md:rounded-2xl md:bottom-auto md:top-1/2 md:-translate-y-1/2 border border-white/50 shadow-2xl"
+            className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl rounded-t-3xl z-[9999] h-[85vh] flex flex-col md:max-w-md md:left-1/2 md:-translate-x-1/2 md:h-[600px] md:rounded-2xl md:bottom-auto md:top-1/2 md:-translate-y-1/2 border border-white/50 shadow-2xl"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-gray-200/50">
@@ -76,7 +82,7 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
                       key={sort}
                       onClick={() => setFilters({ ...filters, sortBy: sort })}
                       className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${filters.sortBy === sort
-                        ? "bg-black text-white border-black shadow-lg"
+                        ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-200"
                         : "glass text-gray-600 hover:bg-white/40 border-white/40"
                         }`}
                     >
@@ -92,7 +98,7 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
                 <div className="space-y-2">
                   {["Cow", "Buffalo", "Bull", "Male Buffalo", "Other"].map((type) => (
                     <label key={type} className="flex items-center gap-3 p-3 rounded-xl glass border border-white/40 cursor-pointer active:scale-[0.99] transition-transform hover:bg-white/40">
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${filters.type.includes(type) ? "bg-black border-black" : "border-gray-400 bg-white/50"}`}>
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${filters.type.includes(type) ? "bg-emerald-600 border-emerald-600" : "border-gray-400 bg-white/50"}`}>
                         {filters.type.includes(type) && <Check size={12} className="text-white" />}
                       </div>
                       <input
@@ -116,7 +122,7 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
                       key={breed}
                       onClick={() => toggleSelection("breed", breed)}
                       className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${filters.breed.includes(breed)
-                        ? "bg-blue-600/90 text-white border-blue-600 shadow-md backdrop-blur-sm"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm"
                         : "glass text-gray-600 hover:bg-white/40 border-white/40"
                         }`}
                     >
@@ -130,13 +136,13 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
               <section>
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Milk Capacity</h3>
-                  <span className="text-blue-600 font-bold text-sm bg-blue-50 px-2 py-1 rounded-md">{filters.milkRange[0]} - {filters.milkRange[1]} L</span>
+                  <span className="text-emerald-600 font-bold text-sm bg-emerald-50 px-2 py-1 rounded-md">{filters.milkRange[0]} - {filters.milkRange[1]} L</span>
                 </div>
                 <input
                   type="range"
                   min="0"
                   max="50"
-                  className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                 />
               </section>
 
@@ -144,7 +150,7 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
               <section>
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Distance</h3>
-                  <span className="text-blue-600 font-bold text-sm bg-blue-50 px-2 py-1 rounded-md">{filters.locationRadius} km</span>
+                  <span className="text-emerald-600 font-bold text-sm bg-emerald-50 px-2 py-1 rounded-md">{filters.locationRadius} km</span>
                 </div>
                 <input
                   type="range"
@@ -152,7 +158,7 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
                   max="500"
                   value={filters.locationRadius}
                   onChange={(e) => setFilters({ ...filters, locationRadius: parseInt(e.target.value) })}
-                  className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                 />
                 <div className="flex justify-between text-[10px] text-gray-400 mt-2 font-medium">
                   <span>5km</span>
@@ -175,7 +181,7 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
                 </button>
                 <button
                   onClick={() => { onApply(filters); onClose(); }}
-                  className="flex-1 px-6 py-3.5 rounded-xl bg-black/90 backdrop-blur-md text-white font-bold hover:bg-black shadow-xl shadow-black/10 transition-all"
+                  className="flex-1 px-6 py-3.5 rounded-xl bg-emerald-600 backdrop-blur-md text-white font-bold hover:bg-emerald-700 shadow-xl shadow-emerald-600/20 transition-all"
                 >
                   Show Results
                 </button>
@@ -184,6 +190,7 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
