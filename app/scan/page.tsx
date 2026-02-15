@@ -1,275 +1,281 @@
 "use client";
 
-import { Camera, ScanLine, X, Zap, Upload, Sparkles, CheckCircle2, AlertTriangle, Milk, TrendingUp, DollarSign } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { Camera, Upload, X, Zap, RefreshCw, CheckCircle, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { analyzeCattleImage } from "@/app/actions/image-analysis"; // Import server action
-// import Image from "next/image"; // Not used directly for preview yet, will use img tag for simplicity with blob
+import { ScanResult } from "@/lib/mockAI"; // Keeping ScanResult interface for now
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function ScanPage() {
-  const [isScanning, setIsScanning] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const streamRef = useRef<MediaStream | null>(null); // Use ref for immediate access in cleanup
+    const [image, setImage] = useState<string | null>(null);
+    const [isScanning, setIsScanning] = useState(false);
+    const [result, setResult] = useState<ScanResult | null>(null);
+    const [cameraError, setCameraError] = useState(false);
+    const router = useRouter();
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    useEffect(() => {
+        startCamera();
+        return () => stopCamera(); // Cleanup on unmount
+    }, []);
 
-    // Create preview
-    const objectUrl = URL.createObjectURL(file);
-    setPreview(objectUrl);
-    setResult(null);
-    setIsScanning(true);
-
-    // Convert to Base64
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64String = reader.result as string; 
-      // Remove data URL prefix (e.g., "data:image/jpeg;base64,")
-      const base64Content = base64String.split(",")[1];
-      const mimeType = file.type;
-
-      try {
-        const analysis = await analyzeCattleImage(base64Content, mimeType);
-        setResult(analysis);
-      } catch (error) {
-        console.error("Scan failed:", error);
-        setResult({ error: "Failed to scan. Please try again." });
-      } finally {
-        setIsScanning(false);
-      }
+    const startCamera = async () => {
+        try {
+            const mediaStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "environment" }
+            });
+            streamRef.current = mediaStream;
+            if (videoRef.current) {
+                videoRef.current.srcObject = mediaStream;
+            }
+            setCameraError(false);
+        } catch (err) {
+            console.error("Camera access denied:", err);
+            setCameraError(true);
+        }
     };
-    reader.readAsDataURL(file);
-  };
 
-  const triggerCamera = () => {
-    fileInputRef.current?.click();
-  };
+    const stopCamera = () => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+    };
 
-  return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden pb-24 md:pl-64">
-      {/* Hidden File Input */}
-      <input 
-        type="file" 
-        accept="image/*" 
-        capture="environment" 
-        className="hidden" 
-        ref={fileInputRef}
-        onChange={handleFileChange}
-      />
+    const captureImage = () => {
+        if (videoRef.current) {
+            const canvas = document.createElement("canvas");
+            canvas.width = videoRef.current.videoWidth;
+            canvas.height = videoRef.current.videoHeight;
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+                ctx.drawImage(videoRef.current, 0, 0);
+                const dataUrl = canvas.toDataURL("image/jpeg");
+                setImage(dataUrl);
+                startAnalysis(dataUrl);
+            }
+        }
+    };
 
-      {/* Camera Viewport / Preview */}
-      <div className="absolute inset-0 bg-gray-900 z-0">
-        {preview ? (
-            <img src={preview} alt="Scan Preview" className="w-full h-full object-cover opacity-60" />
-        ) : (
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40"></div>
-        )}
-        
-        {/* Helper Grid */}
-        <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none">
-            {[...Array(9)].map((_, i) => (
-                <div key={i} className="border border-white/10 relative">
-                    {i === 4 && (
-                        <div className="absolute inset-0 border-2 border-white/50 rounded-lg m-2">
-                             <div className="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-white"></div>
-                             <div className="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-white"></div>
-                             <div className="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-white"></div>
-                             <div className="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-white"></div>
-                        </div>
-                    )}
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const dataUrl = event.target?.result as string;
+                setImage(dataUrl);
+                startAnalysis(dataUrl);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const startAnalysis = async (img: string) => {
+        setIsScanning(true);
+        setResult(null);
+        stopCamera(); // Stop camera immediately after capture
+
+        try {
+            // Convert base64 to blob
+            const response = await fetch(img);
+            const blob = await response.blob();
+            const file = new File([blob], "cattle_scan.jpg", { type: "image/jpeg" });
+
+            const formData = new FormData();
+            formData.append("image", file);
+
+            const apiRes = await fetch("/api/analyze-cattle", {
+                method: "POST",
+                body: formData,
+            });
+
+            const data = await apiRes.json();
+
+            if (!apiRes.ok) {
+                setResult(null);
+                alert(data.error || "Analysis failed"); // Simple alert for now, could be better UI
+            } else {
+                // Map API response to ScanResult type
+                setResult({
+                    breed: data.breed_guess !== "unknown" ? data.breed_guess : data.animal_type,
+                    confidence: parseInt(data.confidence_score) || 85,
+                    health: data.health_observation !== "unknown" ? data.health_observation : "No issues visible",
+                    estimatedPrice: "₹45,000 - ₹60,000", // AI doesn't give price, keep mock logic or "Contact for price"
+                    weight: data.estimated_age_range, // Using age range effectively as extra info
+                    features: [data.color_pattern, data.distinct_markings].filter(f => f && f !== "none")
+                });
+            }
+
+        } catch (error) {
+            console.error("Analysis failed:", error);
+            alert("Failed to connect to analysis service.");
+        } finally {
+            setIsScanning(false);
+        }
+    };
+
+    const resetScan = () => {
+        setImage(null);
+        setResult(null);
+        startCamera();
+    };
+
+    const listForSale = () => {
+        if (!result) return;
+        const query = new URLSearchParams({
+            breed: result.breed,
+            age: result.weight, // mapping 'weight' field to age since API returns age in that slot
+            price: result.estimatedPrice.replace(/[^0-9]/g, '').slice(0, 5), // rough parsing
+            health: result.health
+        }).toString();
+        router.push(`/sell?${query}`);
+    };
+
+    return (
+        <div className="fixed inset-0 z-[60] flex flex-col bg-black md:pl-64">
+            {/* Header Overlay */}
+            <div className="absolute top-0 left-0 right-0 p-4 z-20 flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent md:pl-8">
+                <Link href="/" className="text-white bg-black/20 backdrop-blur-md p-2 rounded-full hover:bg-black/40 transition">
+                    <X size={24} />
+                </Link>
+                <div className="flex items-center gap-2 px-4 py-1.5 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+                    <Zap size={16} className={isScanning ? "text-yellow-400 fill-yellow-400 animate-pulse" : "text-gray-400"} />
+                    <span className="text-white text-xs font-bold uppercase tracking-wider">AI Scanner</span>
                 </div>
-            ))}
-        </div>
-      </div>
+                <div className="w-10" /> {/* Spacer */}
+            </div>
 
-      {/* Header */}
-      <div className="relative z-10 flex justify-between items-center p-4 pt-safe">
-        <button onClick={() => { setPreview(null); setResult(null); }} className="p-2 bg-black/40 rounded-full backdrop-blur-md">
-            <X size={24} />
-        </button>
-        <div className="px-4 py-1 bg-black/40 rounded-full backdrop-blur-md text-sm font-medium flex items-center gap-2">
-            <Sparkles size={14} className="text-yellow-400" />
-            AI Scanner Active
-        </div>
-        <button className="p-2 bg-black/40 rounded-full backdrop-blur-md">
-            <Zap size={24} className={isScanning ? "text-yellow-400" : "text-white"} />
-        </button>
-      </div>
-
-      {/* Scanner Beam Animation */}
-      <AnimatePresence>
-        {isScanning && (
-            <motion.div 
-                initial={{ top: "0%" }}
-                animate={{ top: "100%" }}
-                exit={{ opacity: 0 }}
-                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent shadow-[0_0_20px_rgba(59,130,246,0.5)] z-20"
-            />
-        )}
-      </AnimatePresence>
-
-      {/* Controls & Results */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 flex flex-col items-center gap-6 p-4 bg-gradient-to-t from-black via-black/80 to-transparent pt-20 pb-24 md:pb-8">
-        
-        <AnimatePresence>
-            {result ? (
-                <motion.div 
-                    initial={{ y: 100, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: 100, opacity: 0 }}
-                    drag="y"
-                    dragConstraints={{ top: 0, bottom: 0 }}
-                    className="w-full max-w-md bg-white text-gray-900 rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[70vh] no-scrollbar"
-                >
-                    <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6" />
-                    
-                    {result.error ? (
-                         <div className="text-center py-8">
-                            <AlertTriangle size={48} className="text-red-500 mx-auto mb-4" />
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">Analysis Failed</h3>
-                            <p className="text-gray-500">{result.error}</p>
-                            <button 
-                                onClick={triggerCamera}
-                                className="mt-6 px-6 py-3 bg-gray-900 text-white rounded-xl font-bold"
-                            >
-                                Try Again
-                            </button>
-                         </div>
-                    ) : (
-                        <>
-                            <div className="flex justify-between items-start mb-6">
-                                <div>
-                                    <h2 className="text-3xl font-bold text-gray-900 leading-tight">{result.breed}</h2>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <span className="flex items-center gap-1 text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                                            <CheckCircle2 size={12} />
-                                            {result.confidence}% Match
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                                    <ScanLine size={24} />
-                                </div>
+            {/* Main Content Area */}
+            <div className="flex-1 relative overflow-hidden bg-gray-900">
+                {!image ? (
+                    // Camera View using HTML5 Video
+                    <div className="relative h-full w-full">
+                        {!cameraError ? (
+                            <video
+                                ref={videoRef}
+                                autoPlay
+                                playsInline
+                                muted
+                                className="h-full w-full object-cover"
+                            />
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center text-white p-6 text-center">
+                                <Camera size={48} className="mb-4 text-gray-500" />
+                                <p>Camera access needed. Please upload a photo instead.</p>
                             </div>
-                            
-                            <div className="space-y-4">
-                                {/* Health Status */}
-                                <div className={`p-4 rounded-xl border ${result.disease_analysis?.status === 'Healthy' ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <div className={`p-1.5 rounded-full ${result.disease_analysis?.status === 'Healthy' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                                            <AlertTriangle size={16} />
-                                        </div>
-                                        <h3 className={`font-bold ${result.disease_analysis?.status === 'Healthy' ? 'text-green-800' : 'text-red-800'}`}>
-                                            {result.disease_analysis?.status || "Health Analysis"}
-                                        </h3>
-                                    </div>
-                                    <p className="text-sm text-gray-600 leading-relaxed">
-                                        {result.disease_analysis?.description}
-                                    </p>
-                                    {result.disease_analysis?.symptoms?.length > 0 && (
-                                        <div className="mt-2 flex flex-wrap gap-2">
-                                            {result.disease_analysis.symptoms.map((sym: string, i: number) => (
-                                                <span key={i} className="text-xs font-medium px-2 py-1 bg-white/50 rounded-md border border-gray-200 text-gray-600">
-                                                    {sym}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                        )}
 
-                                {/* Quick Stats */}
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="p-3 bg-gray-50 rounded-xl">
-                                        <div className="flex items-center gap-2 text-blue-600 mb-1">
-                                            <Milk size={16} />
-                                            <span className="text-xs font-bold uppercase">Lactation</span>
-                                        </div>
-                                        <p className="font-semibold text-gray-900 text-sm">
-                                            {result.lactation_potential}
-                                        </p>
-                                    </div>
-                                    <div className="p-3 bg-gray-50 rounded-xl">
-                                        <div className="flex items-center gap-2 text-green-600 mb-1">
-                                            <DollarSign size={16} />
-                                            <span className="text-xs font-bold uppercase">Est. Value</span>
-                                        </div>
-                                         <p className="font-semibold text-gray-900 text-sm">
-                                            {result.listing_recommendation?.estimated_price_range || "N/A"}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Tips */}
-                                <div>
-                                    <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                        <TrendingUp size={18} className="text-purple-600" />
-                                        Maintenance Guide
-                                    </h3>
-                                    <ul className="space-y-2">
-                                        {result.maintenance_tips?.map((tip: string, i: number) => (
-                                            <li key={i} className="flex gap-3 text-sm text-gray-600 bg-gray-50 p-2.5 rounded-lg">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-1.5 shrink-0" />
-                                                {tip}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                                
-                                {/* Actions */}
-                                <div className="pt-2 flex gap-3">
-                                    <button className="flex-1 py-3 bg-black text-white rounded-xl font-bold shadow-lg hover:bg-gray-800 transition-transform active:scale-95">
-                                        List for Sale
-                                    </button>
-                                     <button className="px-4 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200">
-                                        Save
-                                    </button>
-                                </div>
+                        {/* Guide Frame */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="w-64 h-64 border-2 border-white/50 rounded-2xl relative">
+                                <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-emerald-500 -mt-1 -ml-1 rounded-tl-lg" />
+                                <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-emerald-500 -mt-1 -mr-1 rounded-tr-lg" />
+                                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-emerald-500 -mb-1 -ml-1 rounded-bl-lg" />
+                                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-emerald-500 -mb-1 -mr-1 rounded-br-lg" />
                             </div>
-                        </>
-                    )}
-                </motion.div>
-            ) : (
-                <>
-                    <button 
-                        onClick={triggerCamera}
-                        disabled={isScanning}
-                        className={`w-20 h-20 rounded-full border-4 border-white shadow-[0_0_30px_rgba(255,255,255,0.3)] flex items-center justify-center transition-all active:scale-95 ${isScanning ? 'bg-red-500 animate-pulse border-red-200' : 'bg-white/20 backdrop-blur-md hover:bg-white/30'}`}
-                    >
-                        <div className={`w-16 h-16 rounded-full bg-white transition-all duration-300 ${isScanning ? 'scale-50 rounded-lg' : ''}`}></div>
-                    </button>
-                    
-                    {!isScanning && (
-                        <div className="flex gap-8 text-white/80 font-medium text-sm">
-                            <button 
-                                onClick={triggerCamera}
-                                className="flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity"
-                            >
-                                <Upload size={20} />
-                                <span>Upload</span>
-                            </button>
-                             <button 
-                                onClick={triggerCamera}
-                                className="flex flex-col items-center gap-2 text-yellow-400"
-                            >
-                                <Camera size={20} />
-                                <span>Scan</span>
-                            </button>
                         </div>
-                    )}
-                    
-                    {isScanning && (
-                         <div className="text-center space-y-2">
-                             <p className="text-white font-bold text-lg animate-pulse">Analyzing...</p>
-                             <p className="text-white/60 text-xs">Identifying breed & health status</p>
-                         </div>
-                    )}
-                </>
-            )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
+                    </div>
+                ) : (
+                    // Image Preview
+                    <div className="relative h-full w-full">
+                        <Image src={image} alt="Captured" fill className="object-cover" />
+                        {isScanning && (
+                            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center z-10">
+                                <ScanAnimation />
+                                <p className="text-white font-bold mt-4 animate-pulse">Analyzing Cattle ID...</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Bottom Controls */}
+            <div className="bg-black/80 backdrop-blur-xl p-8 pb-Safe md:pb-8">
+                {!image ? (
+                    <div className="flex items-center justify-around">
+                        <label className="p-4 rounded-full bg-white/10 text-white hover:bg-white/20 transition cursor-pointer">
+                            <Upload size={24} />
+                            <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                        </label>
+
+                        <button
+                            onClick={captureImage}
+                            className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center active:scale-95 transition"
+                            disabled={cameraError}
+                        >
+                            <div className="w-16 h-16 bg-white rounded-full" />
+                        </button>
+
+                        <button onClick={() => { }} className="p-4 rounded-full bg-white/10 text-white hover:bg-white/20 transition opacity-0 pointer-events-none">
+                            <RefreshCw size={24} />
+                        </button>
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-4">
+                        {isScanning ? (
+                            <div className="text-center space-y-2">
+                                <p className="text-emerald-400 font-bold animate-pulse">Analyzing Cattle...</p>
+                                <p className="text-gray-400 text-xs text-center">Detecting breed and health markers</p>
+                            </div>
+                        ) : result ? (
+                            <div className="fixed inset-x-0 bottom-0 bg-white rounded-t-3xl p-6 z-50 animate-in slide-in-from-bottom-full duration-500 md:left-64">
+                                <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-6" />
+
+                                <div className="flex justify-between items-start mb-6">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <h2 className="text-2xl font-bold text-gray-900 capitalize">{result.breed}</h2>
+                                            <div className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
+                                                <CheckCircle size={10} /> {result.confidence}% Match
+                                            </div>
+                                        </div>
+                                        <p className="text-gray-500 text-sm">Est. Price: <span className="text-gray-900 font-bold">{result.estimatedPrice}</span></p>
+                                    </div>
+                                    <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emoji-xl">
+                                        🐮
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 mb-6">
+                                    <div className="bg-gray-50 p-3 rounded-xl">
+                                        <p className="text-xs text-gray-500 font-bold uppercase">Age / Features</p>
+                                        <p className="font-semibold text-gray-900 text-sm">{result.weight}</p>
+                                    </div>
+                                    <div className="bg-gray-50 p-3 rounded-xl">
+                                        <p className="text-xs text-gray-500 font-bold uppercase">Health</p>
+                                        <p className="font-semibold text-emerald-600 text-sm">{result.health}</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button onClick={resetScan} className="flex-1 py-3.5 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition">
+                                        Scan Again
+                                    </button>
+                                    <button onClick={listForSale} className="flex-1 py-3.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-200">
+                                        List for Sale <ArrowRight size={18} />
+                                    </button>
+                                </div>
+                            </div>
+                        ) : null}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function ScanAnimation() {
+    return (
+        <div className="relative w-20 h-20">
+            <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 border-t-4 border-emerald-500 rounded-full"
+            />
+            <Zap className="absolute inset-0 m-auto text-emerald-400" />
+        </div>
+    )
 }
