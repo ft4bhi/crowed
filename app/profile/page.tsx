@@ -36,13 +36,18 @@ const mockUser = {
   }
 };
 
+import { useLanguage } from "@/context/LanguageContext";
+
+// ... mocks
+
 export default function ProfilePage() {
   const [listings, setListings] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("active");
   const router = useRouter();
+  const { t, tDynamic } = useLanguage();
 
   useEffect(() => {
-    // Fetch listings
+    // ...
     const fetchListings = async () => {
       const data = await getUserListings("test-user-uid");
       setListings(data);
@@ -67,7 +72,7 @@ export default function ProfilePage() {
       <div className="flex-1">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors">{listing.breed}</h3>
+            <h3 className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors">{tDynamic(listing.breed)}</h3>
             <p className="text-xs text-gray-600 font-bold">₹{listing.price}</p>
           </div>
           <div className="flex gap-2">
@@ -78,8 +83,8 @@ export default function ProfilePage() {
         </div>
 
         <div className="flex gap-4 mt-3 text-xs text-gray-500 font-medium">
-          <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {listing.viewCount} Views</span>
-          <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" /> {listing.whatsappCount} Chats</span>
+          <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {listing.viewCount} {t('views')}</span>
+          <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" /> {listing.whatsappCount} {t('chats')}</span>
         </div>
       </div>
     </div>
@@ -90,9 +95,9 @@ export default function ProfilePage() {
       {/* Header / Profile Card */}
       <div className="glass-nav p-6 md:p-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('myProfile')}</h1>
           <button className="text-red-600 flex items-center gap-1 text-sm font-bold hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-red-100">
-            <LogOut className="w-4 h-4" /> Logout
+            <LogOut className="w-4 h-4" /> {t('logout')}
           </button>
         </div>
 
@@ -106,7 +111,7 @@ export default function ProfilePage() {
               <Phone className="w-3 h-3" /> {mockUser.phone}
             </div>
             <div className="flex items-center gap-1 text-gray-600 text-sm font-medium">
-              <MapPin className="w-3 h-3" /> {mockUser.location}
+              <MapPin className="w-3 h-3" /> {tDynamic(mockUser.location)}
             </div>
           </div>
           <Link href="/settings" className="ml-auto p-2 glass rounded-full hover:bg-white/60 transition-colors">
@@ -118,15 +123,15 @@ export default function ProfilePage() {
         <div className="grid grid-cols-3 gap-4 mt-8">
           <div className="bg-emerald-100/40 backdrop-blur-sm p-4 rounded-xl text-center border border-emerald-200/50">
             <p className="text-emerald-700 font-bold text-xl">{mockUser.stats.activeListings}</p>
-            <p className="text-emerald-700/80 text-xs font-bold uppercase tracking-wide">Active</p>
+            <p className="text-emerald-700/80 text-xs font-bold uppercase tracking-wide">{t('active')}</p>
           </div>
           <div className="bg-green-100/40 backdrop-blur-sm p-4 rounded-xl text-center border border-green-200/50">
             <p className="text-green-700 font-bold text-xl">{mockUser.stats.sold}</p>
-            <p className="text-green-700/80 text-xs font-bold uppercase tracking-wide">Sold</p>
+            <p className="text-green-700/80 text-xs font-bold uppercase tracking-wide">{t('sold')}</p>
           </div>
           <div className="glass p-4 rounded-xl text-center">
             <p className="text-gray-800 font-bold text-xl">{mockUser.stats.views}</p>
-            <p className="text-gray-600 text-xs font-bold uppercase tracking-wide">Total Views</p>
+            <p className="text-gray-600 text-xs font-bold uppercase tracking-wide">{t('totalViews')}</p>
           </div>
         </div>
       </div>
@@ -139,19 +144,19 @@ export default function ProfilePage() {
               value="active"
               className={`px-4 py-2.5 text-sm font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'active' ? 'bg-emerald-600 text-white shadow-lg' : 'glass text-gray-600 hover:bg-white/40'}`}
             >
-              <Grid className="w-4 h-4" /> Active ({activeListings.length})
+              <Grid className="w-4 h-4" /> {t('active')} ({activeListings.length})
             </Tabs.Trigger>
             <Tabs.Trigger
               value="sold"
               className={`px-4 py-2.5 text-sm font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'sold' ? 'bg-emerald-600 text-white shadow-lg' : 'glass text-gray-600 hover:bg-white/40'}`}
             >
-              <CheckCircle className="w-4 h-4" /> Sold ({soldListings.length})
+              <CheckCircle className="w-4 h-4" /> {t('sold')} ({soldListings.length})
             </Tabs.Trigger>
             <Tabs.Trigger
               value="drafts"
               className={`px-4 py-2.5 text-sm font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'drafts' ? 'bg-emerald-600 text-white shadow-lg' : 'glass text-gray-600 hover:bg-white/40'}`}
             >
-              <FileText className="w-4 h-4" /> Drafts ({draftListings.length})
+              <FileText className="w-4 h-4" /> {t('drafts')} ({draftListings.length})
             </Tabs.Trigger>
           </Tabs.List>
 
@@ -159,7 +164,7 @@ export default function ProfilePage() {
             {activeListings.length > 0 ? (
               activeListings.map(l => <ListingItem key={l.id} listing={l} />)
             ) : (
-              <div className="text-center py-12 text-gray-400 font-medium">No active listings</div>
+              <div className="text-center py-12 text-gray-400 font-medium">{t('noActiveListings')}</div>
             )}
           </Tabs.Content>
 
@@ -167,7 +172,7 @@ export default function ProfilePage() {
             {soldListings.length > 0 ? (
               soldListings.map(l => <ListingItem key={l.id} listing={l} />)
             ) : (
-              <div className="text-center py-12 text-gray-400 font-medium">No sold listings yet</div>
+              <div className="text-center py-12 text-gray-400 font-medium">{t('noSoldListings')}</div>
             )}
           </Tabs.Content>
 
@@ -175,7 +180,7 @@ export default function ProfilePage() {
             {draftListings.length > 0 ? (
               draftListings.map(l => <ListingItem key={l.id} listing={l} />)
             ) : (
-              <div className="text-center py-12 text-gray-400 font-medium">No drafts</div>
+              <div className="text-center py-12 text-gray-400 font-medium">{t('noDrafts')}</div>
             )}
           </Tabs.Content>
         </Tabs.Root>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Heart, MessageCircle, Phone, MapPin, PlayCircle } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ListingCardProps {
     listing: {
@@ -23,6 +24,7 @@ interface ListingCardProps {
 export default function ListingCard({ listing }: ListingCardProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
+    const { t } = useLanguage();
 
     useEffect(() => {
         // Auto-play when in viewport logic could go here
@@ -75,7 +77,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
                     {listing.video && !isPlaying && (
                         <div className="absolute top-3 right-3 glass text-neutral-900 text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 backdrop-blur-md z-10 transition-transform group-hover:scale-105 shadow-sm border border-emerald-100/30">
                             <PlayCircle size={14} fill="currentColor" className="text-emerald-700 opacity-80" />
-                            <span className="font-bold text-emerald-900">Video</span>
+                            <span className="font-bold text-emerald-900">{t('video')}</span>
                         </div>
                     )}
 
@@ -110,14 +112,14 @@ export default function ListingCard({ listing }: ListingCardProps) {
                     <div className="grid grid-cols-2 gap-2 mt-auto">
                         {listing.milk && (
                             <div className="bg-white/50 rounded-xl p-1.5 md:p-2 text-center border border-white/40 shadow-sm">
-                                <p className="text-[9px] md:text-[10px] text-neutral-500 uppercase font-bold tracking-wide">Milk</p>
+                                <p className="text-[9px] md:text-[10px] text-neutral-500 uppercase font-bold tracking-wide">{t('milk')}</p>
                                 <p className="text-xs md:text-sm font-bold text-neutral-900">{listing.milk} L</p>
                             </div>
                         )}
                         {listing.isPregnant && (
                             <div className="bg-emerald-100/60 rounded-xl p-1.5 md:p-2 text-center border border-emerald-200/50 shadow-sm">
-                                <p className="text-[9px] md:text-[10px] text-emerald-700 uppercase font-bold tracking-wide">Pregnant</p>
-                                <p className="text-xs md:text-sm font-bold text-emerald-800">Yes</p>
+                                <p className="text-[9px] md:text-[10px] text-emerald-700 uppercase font-bold tracking-wide">{t('pregnant')}</p>
+                                <p className="text-xs md:text-sm font-bold text-emerald-800">{t('yes')}</p>
                             </div>
                         )}
                         {!listing.isPregnant && listing.gender && (
@@ -134,11 +136,11 @@ export default function ListingCard({ listing }: ListingCardProps) {
             <div className="p-3 md:p-4 pt-0 flex gap-2 mt-auto bg-white/40 backdrop-blur-sm rounded-b-3xl">
                 <button className="flex-1 flex items-center justify-center gap-2 glass-button py-2.5 rounded-xl font-bold text-sm text-emerald-800 hover:text-emerald-700 hover:border-emerald-200 hover:bg-emerald-50/50 transition-all shadow-sm">
                     <MessageCircle size={16} className="text-emerald-600" />
-                    <span>Chat</span>
+                    <span>{t('chat')}</span>
                 </button>
                 <button className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 backdrop-blur-md text-white py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 shadow-emerald-900/20">
                     <Phone size={16} />
-                    <span>Call</span>
+                    <span>{t('call')}</span>
                 </button>
             </div>
         </div>

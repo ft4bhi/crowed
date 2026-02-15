@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { MapPin, X, Check, Crosshair } from "lucide-react";
 
+import { useLanguage } from "@/context/LanguageContext";
+
 const locations = [
     "Kerala, IN",
     "Tamil Nadu, IN",
@@ -22,6 +24,7 @@ export default function LocationPicker() {
     const [selectedLocation, setSelectedLocation] = useState("Kerala, IN");
     const [isDetecting, setIsDetecting] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const { t, tDynamic } = useLanguage();
 
     useEffect(() => {
         setMounted(true);
@@ -82,7 +85,7 @@ export default function LocationPicker() {
                 <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <MapPin size={14} className="text-green-600 fill-green-600/20" />
                 </div>
-                <span className="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">{selectedLocation}</span>
+                <span className="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">{tDynamic(selectedLocation)}</span>
             </button>
 
             {/* Portal to Body for Full Screen Overlay */}
@@ -107,9 +110,9 @@ export default function LocationPicker() {
                             <div className="mb-6">
                                 <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                     <MapPin size={22} className="text-primary-600" />
-                                    Select Location
+                                    {t('selectLocation')}
                                 </h3>
-                                <p className="text-sm text-gray-500 mt-1">Choose your preferred region</p>
+                                <p className="text-sm text-gray-500 mt-1">{t('chooseRegion')}</p>
                             </div>
 
                             <button
@@ -118,7 +121,7 @@ export default function LocationPicker() {
                                 className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-600/20"
                             >
                                 <Crosshair size={20} className={isDetecting ? "animate-spin" : ""} />
-                                <span>{isDetecting ? "Detecting..." : "Use Current Location"}</span>
+                                <span>{isDetecting ? t('detecting') : t('useCurrentLocation')}</span>
                             </button>
                         </div>
 
@@ -128,7 +131,7 @@ export default function LocationPicker() {
                                 <div className="w-full border-t border-gray-100"></div>
                             </div>
                             <div className="relative flex justify-center text-xs uppercase tracking-wider font-semibold">
-                                <span className="bg-white/95 px-3 text-gray-400">Or Select from list</span>
+                                <span className="bg-white/95 px-3 text-gray-400">{t('orSelect')}</span>
                             </div>
                         </div>
 
@@ -143,7 +146,7 @@ export default function LocationPicker() {
                                         : "bg-gray-50/50 border-gray-100 text-gray-700 hover:bg-gray-100"
                                         }`}
                                 >
-                                    <span className="font-medium">{location}</span>
+                                    <span className="font-medium">{tDynamic(location)}</span>
                                     {selectedLocation === location && (
                                         <Check size={20} className="text-primary-600" />
                                     )}

@@ -4,9 +4,24 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { bottomTabs } from "@/data/nav";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/context/LanguageContext";
 
 const BottomNavBar = () => {
     const pathname = usePathname();
+    const { t } = useLanguage();
+
+    // Map labels to translation keys
+    const getLabel = (label: string) => {
+        const lower = label.toLowerCase();
+        if (lower === 'home') return t('home');
+        if (lower === 'sell') return t('sell');
+        if (lower === 'chat') return t('chats');
+        if (lower === 'profile') return t('profile');
+        if (lower === 'scan') return t('scan');
+        if (lower === 'product') return t('product');
+        if (lower === 'learn') return t('learn');
+        return label;
+    };
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden pb-safe">
@@ -33,7 +48,7 @@ const BottomNavBar = () => {
                                 )}
                             </div>
                             <span className={`text-[10px] font-medium mt-1 transition-colors ${isActive ? 'text-emerald-600' : 'text-gray-400'}`}>
-                                {label}
+                                {getLabel(label)}
                             </span>
                         </Link>
                     );

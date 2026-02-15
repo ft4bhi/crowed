@@ -5,8 +5,23 @@ import { usePathname } from "next/navigation";
 import { bottomTabs } from "@/data/nav";
 import { Settings, LogOut, Bell } from "lucide-react";
 
+import { useLanguage } from "@/context/LanguageContext";
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const { t } = useLanguage();
+
+  // Map labels to translation keys (Reuse logic from BottomNavBar essentially)
+  const getLabel = (label: string) => {
+    const lower = label.toLowerCase();
+    if (lower === 'home') return t('home');
+    if (lower === 'sell') return t('sell');
+    if (lower === 'scan') return t('scan');
+    if (lower === 'product') return t('product');
+    if (lower === 'learn') return t('learn');
+    // Account items if labels were passed, but they are hardcoded below
+    return label;
+  };
 
   return (
     <aside className="hidden md:flex flex-col w-64 h-screen fixed inset-y-0 left-0 bg-white border-r border-gray-200 z-50">
@@ -30,8 +45,8 @@ export default function Sidebar() {
               key={name}
               href={href}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                  ? "bg-blue-50 text-blue-600 shadow-sm"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                ? "bg-blue-50 text-blue-600 shadow-sm"
+                : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                 }`}
             >
               <Icon
@@ -41,7 +56,7 @@ export default function Sidebar() {
                   }`}
               />
               <span className={`font-medium ${isActive ? "font-semibold" : ""}`}>
-                {label}
+                {getLabel(label)}
               </span>
               {isActive && (
                 <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600" />

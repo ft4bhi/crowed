@@ -4,6 +4,7 @@ import "./globals.css";
 import BottomNavBar from "@/components/bottomNavbar";
 import Sidebar from "@/components/Sidebar";
 import MobileHeader from "@/components/MobileHeader";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -31,14 +32,16 @@ export default function RootLayout({
                 suppressHydrationWarning={true}
                 className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 text-gray-900`}
             >
-                <Sidebar />
-                <div className="flex flex-col min-h-screen md:pl-64">
-                    <MobileHeader />
-                    <main className="flex-1 md:pb-0">
-                        {children}
-                    </main>
-                    <BottomNavBar />
-                </div>
+                <LanguageProvider>
+                    <Sidebar />
+                    <div className="flex flex-col min-h-screen md:pl-64">
+                        <MobileHeader />
+                        <main className="flex-1 md:pb-0">
+                            {children}
+                        </main>
+                        <BottomNavBar />
+                    </div>
+                </LanguageProvider>
             </body>
         </html>
     );

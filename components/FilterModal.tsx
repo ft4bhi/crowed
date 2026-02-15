@@ -11,7 +11,12 @@ interface FilterModalProps {
   onApply: (filters: any) => void;
 }
 
+// ... imports
+import { useLanguage } from "@/context/LanguageContext";
+
 export default function FilterModal({ isOpen, onClose, onApply }: FilterModalProps) {
+  const { t, tDynamic } = useLanguage();
+  // ... state ...
   const [filters, setFilters] = useState({
     type: [] as string[],
     lactation: [] as string[],
@@ -31,6 +36,7 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
   }, []);
 
   const toggleSelection = (category: keyof typeof filters, value: string) => {
+    // ... same logic
     setFilters((prev) => {
       const current = prev[category] as string[];
       const includes = current.includes(value);
@@ -64,7 +70,7 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
           >
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-gray-200/50">
-              <h2 className="text-xl font-bold text-gray-900">Filters</h2>
+              <h2 className="text-xl font-bold text-gray-900">{t('filters')}</h2>
               <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors">
                 <X size={20} className="text-gray-500" />
               </button>
@@ -75,7 +81,7 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
 
               {/* Sort By */}
               <section>
-                <h3 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">Sort By</h3>
+                <h3 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">{t('sortBy')}</h3>
                 <div className="flex flex-wrap gap-2">
                   {["Latest", "Price: Low to High", "Price: High to Low", "Milk: High to Low"].map((sort) => (
                     <button
@@ -86,7 +92,7 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
                         : "glass text-gray-600 hover:bg-white/40 border-white/40"
                         }`}
                     >
-                      {sort}
+                      {tDynamic(sort)}
                     </button>
                   ))}
                 </div>
@@ -94,7 +100,7 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
 
               {/* Type */}
               <section>
-                <h3 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">Type</h3>
+                <h3 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">{t('type')}</h3>
                 <div className="space-y-2">
                   {["Cow", "Buffalo", "Bull", "Male Buffalo", "Other"].map((type) => (
                     <label key={type} className="flex items-center gap-3 p-3 rounded-xl glass border border-white/40 cursor-pointer active:scale-[0.99] transition-transform hover:bg-white/40">
@@ -107,7 +113,7 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
                         checked={filters.type.includes(type)}
                         onChange={() => toggleSelection("type", type)}
                       />
-                      <span className="text-gray-800 font-medium">{type}</span>
+                      <span className="text-gray-800 font-medium">{tDynamic(type)}</span>
                     </label>
                   ))}
                 </div>
@@ -115,9 +121,9 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
 
               {/* Breed */}
               <section>
-                <h3 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">Breed</h3>
+                <h3 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">{t('breed')}</h3>
                 <div className="flex flex-wrap gap-2">
-                  {["Jersey", "Holstein Friesian", "Murrah", "Sahiwal", "Gir", "Red Sindhi", "Vechur"].map((breed) => (
+                  {["Jersey", "Holstein Friesian", "Murrah", "Sahiwal", "Gir", "Red Sindhi", "Vechur", "Kasargod Dwarf", "Sunandini", "Kapila"].map((breed) => (
                     <button
                       key={breed}
                       onClick={() => toggleSelection("breed", breed)}
@@ -126,22 +132,24 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
                         : "glass text-gray-600 hover:bg-white/40 border-white/40"
                         }`}
                     >
-                      {breed}
+                      {tDynamic(breed)}
                     </button>
                   ))}
                 </div>
               </section>
 
-              {/* Milk Range Slider (Mock) */}
+              {/* Milk Range Slider */}
               <section>
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Milk Capacity</h3>
+                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('milkCapacity')}</h3>
                   <span className="text-emerald-600 font-bold text-sm bg-emerald-50 px-2 py-1 rounded-md">{filters.milkRange[0]} - {filters.milkRange[1]} L</span>
                 </div>
                 <input
+                  // ...
                   type="range"
                   min="0"
                   max="50"
+                  //...
                   className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                 />
               </section>
@@ -149,9 +157,10 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
               {/* Location Radius */}
               <section>
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Distance</h3>
+                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('distance')}</h3>
                   <span className="text-emerald-600 font-bold text-sm bg-emerald-50 px-2 py-1 rounded-md">{filters.locationRadius} km</span>
                 </div>
+                {/* ... input ... */}
                 <input
                   type="range"
                   min="5"
@@ -177,20 +186,21 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
                   })}
                   className="px-6 py-3.5 rounded-xl text-gray-600 font-bold border border-gray-300/50 hover:bg-white/50 transition-colors glass"
                 >
-                  Reset
+                  {t('reset')}
                 </button>
                 <button
                   onClick={() => { onApply(filters); onClose(); }}
                   className="flex-1 px-6 py-3.5 rounded-xl bg-emerald-600 backdrop-blur-md text-white font-bold hover:bg-emerald-700 shadow-xl shadow-emerald-600/20 transition-all"
                 >
-                  Show Results
+                  {t('showResults')}
                 </button>
               </div>
             </div>
           </motion.div>
         </>
-      )}
-    </AnimatePresence>,
+      )
+      }
+    </AnimatePresence >,
     document.body
   );
 }
