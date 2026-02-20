@@ -54,6 +54,13 @@ export const translations = {
         uploadPhotos: "Upload Photos",
         detectLocation: "Auto-detect GPS Location",
 
+        // Location Picker
+        selectLocation: "Select Location",
+        chooseRegion: "Choose your region",
+        useCurrentLocation: "Use Current Location",
+        detecting: "Detecting...",
+        orSelect: "Or select from list",
+
         // Common
         loading: "Loading...",
         error: "Error",

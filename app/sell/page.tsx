@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef } from "react";
@@ -53,7 +54,9 @@ export default function SellPage() {
         }
     };
 
-    const detectLocation = () => {
+    const detectLocation = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         setLocationLoading(true);
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -65,14 +68,23 @@ export default function SellPage() {
                         longitude: longitude.toString()
                     }));
 
-                    setTimeout(() => {
+                    // Reverse geocode using OpenStreetMap Nominatim API
+                    try {
+                        const res = await fetch(
+                            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`,
+                            { headers: { "Accept-Language": "en" } }
+                        );
+                        const geo = await res.json();
+                        const address = geo.address || {};
                         setFormData(prev => ({
                             ...prev,
-                            district: "Auto-detected District",
-                            state: "Auto-detected State"
+                            district: address.county || address.city || address.town || address.village || "",
+                            state: address.state || "",
                         }));
-                        setLocationLoading(false);
-                    }, 1000);
+                    } catch (geoErr) {
+                        console.error("Reverse geocoding failed:", geoErr);
+                    }
+                    setLocationLoading(false);
                 },
                 (error) => {
                     console.error("Error detecting location:", error);

@@ -2,11 +2,31 @@
 
 import { db } from "@/lib/db";
 import { listings, users } from "@/lib/schema";
-import { desc, eq, and, gte, lte, inArray, like, sql } from "drizzle-orm";
-// @ts-ignore
+import { desc, eq, and, gte, lte, inArray, sql } from "drizzle-orm";
 import { uploadToCloudinary } from "@/lib/cloudinary";
+import { cookies } from "next/headers";
+import { adminAuth } from "@/lib/firebase/firebaseadmin";
+import { SESSION_COOKIE_NAME } from "@/lib/firebase/constants";
+import { revalidatePath } from "next/cache";
 
 const PAGE_SIZE = 10;
+
+/**
+ * Verify the current user's session and return their UID.
+ * Returns null if not authenticated.
+ */
+async function getAuthenticatedUid(): Promise<string | null> {
+    try {
+        const cookieStore = await cookies();
+        const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+        if (!session || !adminAuth) return null;
+
+        const decoded = await adminAuth.verifyIdToken(session);
+        return decoded.uid;
+    } catch {
+        return null;
+    }
+}
 
 export async function getListings({
     page = 1,
@@ -18,10 +38,10 @@ export async function getListings({
         breed?: string[];
         minPrice?: number;
         maxPrice?: number;
-        milk?: number; // min milk
+        milk?: number;
         lactation?: string[];
-        pregnancy?: string; // "Yes", "No", "All"
-        locationRadius?: number; // Not implemented yet without PostGIS
+        pregnancy?: string;
+        locationRadius?: number;
         origin?: string;
     };
 }) {
@@ -34,7 +54,7 @@ export async function getListings({
         conditions.push(inArray(listings.breed, filters.breed));
     }
     if (filters.minPrice !== undefined) {
-        conditions.push(gte(listings.price, filters.minPrice.toString())); // Cast to string for decimal
+        conditions.push(gte(listings.price, filters.minPrice.toString()));
     }
     if (filters.maxPrice !== undefined) {
         conditions.push(lte(listings.price, filters.maxPrice.toString()));
@@ -42,7 +62,6 @@ export async function getListings({
     if (filters.lactation && filters.lactation.length > 0) {
         conditions.push(inArray(listings.lactationStage, filters.lactation));
     }
-    // Simplified logic for milk (greater than eq)
     if (filters.milk) {
         conditions.push(gte(listings.milkProduction, filters.milk.toString()));
     }
@@ -56,11 +75,11 @@ export async function getListings({
                 type: listings.type,
                 breed: listings.breed,
                 price: listings.price,
-                location: listings.district, // using district as location for card
-                image: sql<string>`${listings.images}->>0`, // Get first image
+                location: listings.district,
+                image: sql<string>`${listings.images}->>0`,
                 video: listings.video,
                 milk: listings.milkProduction,
-                isPregnant: listings.pregnancyStatus, // Map to boolean in UI if needed or check string
+                isPregnant: listings.pregnancyStatus,
                 gender: listings.gender,
                 createdAt: listings.createdAt,
             })
@@ -102,63 +121,71 @@ export async function getListingById(id: number) {
 
 export async function createListing(formData: FormData) {
     try {
-        const images: File[] = formData.getAll("images") as File[];
-        const video = formData.get("video") as File;
+        // Authenticate user from session cookie
+        const sellerUid = await getAuthenticatedUid();
+        if (!sellerUid) {
+            return { error: "You must be logged in to create a listing" };
+        }
 
-        let imageUrls: string[] = [];
+        const images: File[] = formData.getAll("images") as File[];
+        const video = formData.get("video") as File | null;
+
+        const imageUrls: string[] = [];
         let videoUrl = "";
 
-        // Upload images
+        // Upload images to Cloudinary
         if (images && images.length > 0) {
             for (const image of images) {
                 if (image.size > 0) {
                     const url = await uploadToCloudinary(image, "cattle-marketplace/images");
-                    // @ts-ignore
-                    imageUrls.push(url);
+                    imageUrls.push(url as string);
                 }
             }
         }
 
-        // Upload video
+        // Upload video to Cloudinary
         if (video && video.size > 0) {
-            const url = await uploadToCloudinary(video, "cattle-marketplace/videos");
-            // @ts-ignore
-            videoUrl = url;
+            videoUrl = (await uploadToCloudinary(video, "cattle-marketplace/videos")) as string;
         }
 
-        const rawData = {
-            type: formData.get("type") as string,
-            breed: formData.get("breed") as string,
-            gender: formData.get("gender") as string,
-            age: parseInt(formData.get("age") as string),
-            ageUnit: formData.get("ageUnit") as string,
-            milkProduction: formData.get("milkProduction") ? (formData.get("milkProduction") as string) : null,
-            lactationStage: formData.get("lactationStage") as string,
-            pregnancyStatus: formData.get("pregnancyStatus") as string,
-            price: formData.get("price") as string,
-            isNegotiable: formData.get("isNegotiable") === "true",
-            locationLat: formData.get("latitude") as string,
-            locationLng: formData.get("longitude") as string,
-            district: formData.get("district") as string,
-            state: formData.get("state") as string,
-            sellerUid: "test-user-uid", // Replace with actual auth user ID
-            images: JSON.stringify(imageUrls),
-            video: videoUrl,
-        };
+        const type = formData.get("type") as string;
+        const price = formData.get("price") as string;
 
-        if (!rawData.type || !rawData.price) {
-            return { error: "Missing required fields" };
+        if (!type || !price) {
+            return { error: "Type and price are required" };
         }
+
+        const milkProd = formData.get("milkProduction") as string | null;
+        const lat = formData.get("latitude") as string | null;
+        const lng = formData.get("longitude") as string | null;
+
+        // Ensure user exists in the users table (FK constraint)
+        await db
+            .insert(users)
+            .values({ uid: sellerUid })
+            .onConflictDoNothing({ target: users.uid });
 
         await db.insert(listings).values({
-            // @ts-ignore
-            ...rawData,
-            milkProduction: rawData.milkProduction ? rawData.milkProduction.toString() : null,
-            locationLat: rawData.locationLat ? rawData.locationLat.toString() : null,
-            locationLng: rawData.locationLng ? rawData.locationLng.toString() : null,
-            images: JSON.parse(rawData.images), // Parse back to array because rawData.images was stringified for form data logic above? Wait.
+            sellerUid,
+            type,
+            breed: (formData.get("breed") as string) || null,
+            gender: (formData.get("gender") as string) || null,
+            age: formData.get("age") ? parseInt(formData.get("age") as string) : null,
+            ageUnit: (formData.get("ageUnit") as string) || "years",
+            milkProduction: milkProd || null,
+            lactationStage: (formData.get("lactationStage") as string) || null,
+            pregnancyStatus: (formData.get("pregnancyStatus") as string) || null,
+            price,
+            isNegotiable: formData.get("isNegotiable") === "true",
+            locationLat: lat || null,
+            locationLng: lng || null,
+            district: (formData.get("district") as string) || null,
+            state: (formData.get("state") as string) || null,
+            images: imageUrls,
+            video: videoUrl || null,
         });
 
+        revalidatePath("/");
         return { success: true };
     } catch (error) {
         console.error("Error creating listing:", error);
