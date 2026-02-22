@@ -25,7 +25,7 @@ const BottomNavBar = () => {
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden pb-safe">
-            {/* Glass Background - now using global class logic manually since it has custom borders */}
+            {/* Glass Background */}
             <div className="absolute inset-0 bg-white/70 backdrop-blur-xl border-t border-white/40 shadow-lg-up" />
 
             <div className="relative flex justify-around items-center h-16 px-2 max-w-md mx-auto">
