@@ -16,11 +16,11 @@ const NutritionTab = dynamic(
 );
 const HealthTab = dynamic(
   () => import("@/components/encyclopedia/HealthTab"),
-  { loading: () => <TabSkeleton /> }
+  { ssr: false, loading: () => <TabSkeleton /> }
 );
 const SchemesTab = dynamic(
   () => import("@/components/encyclopedia/SchemesTab"),
-  { loading: () => <TabSkeleton /> }
+  { ssr: false, loading: () => <TabSkeleton /> }
 );
 
 function TabSkeleton() {
@@ -108,8 +108,8 @@ export default function EncyclopediaPage() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-200 shrink-0 ${isActive
-                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-200/50"
-                      : "bg-white/60 text-neutral-500 border border-neutral-200/60 hover:bg-white/80 hover:text-neutral-700"
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-200/50"
+                    : "bg-white/60 text-neutral-500 border border-neutral-200/60 hover:bg-white/80 hover:text-neutral-700"
                     }`}
                 >
                   <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />

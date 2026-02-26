@@ -5,6 +5,7 @@ import {
     Chart as ChartJS,
     CategoryScale,
     LinearScale,
+    BarController,
     BarElement,
     PointElement,
     LineElement,
@@ -19,6 +20,7 @@ import { Calculator, TrendingUp } from "lucide-react";
 ChartJS.register(
     CategoryScale,
     LinearScale,
+    BarController,
     BarElement,
     PointElement,
     LineElement,
