@@ -12,7 +12,7 @@ import {
     Tooltip,
     Legend,
 } from "chart.js";
-import { Bar } from "react-chartjs-2";
+import { Chart } from "react-chartjs-2";
 import { breedData } from "@/data/encyclopediaData";
 import { Calculator, TrendingUp } from "lucide-react";
 
@@ -122,7 +122,7 @@ export default function ProductionTab() {
                             </span>
                         </div>
                         <div className="h-[260px] md:h-[300px]">
-                            <Bar data={chartData} options={chartOptions} />
+                            <Chart type="bar" data={chartData} options={chartOptions} />
                         </div>
                         <p className="text-[11px] text-center text-neutral-400 mt-2">
                             Average daily yield vs. fat percentage by breed
