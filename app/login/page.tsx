@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
+import { markSessionSet } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +28,11 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
       });
+
+      // Signal AuthContext to skip its own duplicate session call
+      markSessionSet();
+      // Refresh server components so they pick up the new session cookie
+      router.refresh();
 
       if (result.isAdmin) {
         router.push("/admin");

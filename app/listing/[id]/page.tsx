@@ -1,14 +1,18 @@
-import { getListingById } from "@/app/actions/listings";
+import { getListingById, incrementViewCount } from "@/app/actions/listings";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, MapPin, Share2, Heart, ShieldCheck, Calendar } from "lucide-react";
+import { ArrowLeft, MapPin, ShieldCheck, Calendar, User } from "lucide-react";
 import ListingContactActions from "@/components/ListingContactActions";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const listing = await getListingById(parseInt(id));
+    const numericId = parseInt(id);
+    const listing = await getListingById(numericId);
+
+    // Fire-and-forget view count increment
+    incrementViewCount(numericId);
 
     if (!listing) {
         return (
@@ -23,6 +27,9 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
     const images = listing.images || [];
     if (listing.video) images.unshift(listing.video);
+
+    const sellerName = listing.seller?.displayName || "Seller";
+    const sellerInitial = sellerName[0]?.toUpperCase() || "S";
 
     return (
         <div className="min-h-screen pb-24">
@@ -109,15 +116,35 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
                     <hr className="border-gray-200/50" />
 
                     {/* Seller Info */}
-                    <div className="flex items-center gap-4 glass p-4 rounded-xl">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-lg font-bold text-blue-700 shadow-sm border border-white">
-                            {(listing.seller?.userRole || "U")[0].toUpperCase()}
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="font-bold text-gray-900">Seller {listing.seller?.farmingExperience ? `(${listing.seller.farmingExperience} yrs exp)` : ""}</h3>
-                            <div className="flex items-center gap-1 text-xs text-green-700 font-bold">
-                                <ShieldCheck className="w-3 h-3" />
-                                <span>Verified User</span>
+                    <div className="glass p-4 rounded-xl">
+                        <div className="flex items-center gap-4">
+                            {listing.seller?.profilePhoto ? (
+                                <img
+                                    src={listing.seller.profilePhoto}
+                                    alt={sellerName}
+                                    className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+                                />
+                            ) : (
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-lg font-bold text-blue-700 shadow-sm border border-white">
+                                    {sellerInitial}
+                                </div>
+                            )}
+                            <div className="flex-1">
+                                <h3 className="font-bold text-gray-900">
+                                    {sellerName}
+                                    {listing.seller?.farmingExperience ? (
+                                        <span className="text-xs text-gray-500 font-normal ml-2">
+                                            ({listing.seller.farmingExperience} yrs exp)
+                                        </span>
+                                    ) : null}
+                                </h3>
+                                {listing.seller?.bio && (
+                                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{listing.seller.bio}</p>
+                                )}
+                                <div className="flex items-center gap-1 text-xs text-green-700 font-bold mt-1">
+                                    <ShieldCheck className="w-3 h-3" />
+                                    <span>Verified User</span>
+                                </div>
                             </div>
                         </div>
                     </div>

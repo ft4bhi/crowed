@@ -13,6 +13,8 @@ import {
 // -------------------- Users --------------------
 export const users = pgTable("users", {
   uid: varchar("uid", { length: 255 }).primaryKey(),
+  displayName: varchar("display_name", { length: 255 }),
+  bio: text("bio"),
   userRole: varchar("user_role", { length: 50 }).default("user").notNull(),
   phone: varchar("phone", { length: 20 }),
   whatsappNumber: varchar("whatsapp_number", { length: 20 }),

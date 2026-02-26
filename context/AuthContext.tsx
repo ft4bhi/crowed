@@ -4,6 +4,12 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User } from "firebase/auth";
 import { onAuthStateChanged } from "@/lib/firebase/auth";
 
+// Module-level flag: login page sets this to prevent duplicate session POST
+let _sessionAlreadySet = false;
+export function markSessionSet() {
+    _sessionAlreadySet = true;
+}
+
 interface AuthContextType {
     user: User | null;
     loading: boolean;
@@ -26,8 +32,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const unsubscribe = onAuthStateChanged(async (authUser) => {
             setUser(authUser);
 
-            if (authUser) {
-                // Set server-side httpOnly session cookie
+            if (authUser && !_sessionAlreadySet) {
+                // Set server-side httpOnly session cookie (skip if login page already did it)
                 try {
                     const idToken = await authUser.getIdToken();
                     await fetch("/api/auth/session", {
@@ -39,6 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     console.warn("Failed to set server session cookie:", error);
                 }
             }
+            // Reset the flag after consuming it
+            _sessionAlreadySet = false;
 
             setLoading(false);
         });

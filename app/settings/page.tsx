@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -10,12 +10,20 @@ import {
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { signOutUser } from "@/lib/firebase/auth";
+import { getMyListingsStats } from "@/app/actions/listings";
 
 export default function SettingsPage() {
   const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
   const { user, loading: authLoading } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [stats, setStats] = useState({ listed: 0, sold: 0, views: 0 });
+
+  useEffect(() => {
+    if (user) {
+      getMyListingsStats().then(setStats);
+    }
+  }, [user]);
 
   const settingsLinks = [
     { href: "/settings/partner", label: t('becomePartner'), icon: Handshake, highlight: true },
@@ -93,25 +101,28 @@ export default function SettingsPage() {
         <div className="glass-card p-5">
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{t('myLivestockStats')}</h3>
           <div className="grid grid-cols-3 gap-3">
-            <div className="text-center p-3 bg-white/50 rounded-xl">
-              <div className="w-8 h-8 mx-auto mb-2 rounded-full bg-blue-50 flex items-center justify-center">
+            <button
+              onClick={() => router.push("/settings/my-listings")}
+              className="text-center p-3 bg-white/50 rounded-xl hover:bg-blue-50/60 transition-colors cursor-pointer group"
+            >
+              <div className="w-8 h-8 mx-auto mb-2 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
                 <Package size={16} className="text-blue-600" />
               </div>
-              <p className="text-xl font-bold text-gray-900">—</p>
+              <p className="text-xl font-bold text-gray-900">{stats.listed}</p>
               <p className="text-xs text-gray-500 font-medium">{t('listed')}</p>
-            </div>
+            </button>
             <div className="text-center p-3 bg-white/50 rounded-xl">
               <div className="w-8 h-8 mx-auto mb-2 rounded-full bg-green-50 flex items-center justify-center">
                 <CheckCircle size={16} className="text-green-600" />
               </div>
-              <p className="text-xl font-bold text-gray-900">—</p>
+              <p className="text-xl font-bold text-gray-900">{stats.sold}</p>
               <p className="text-xs text-gray-500 font-medium">{t('sold')}</p>
             </div>
             <div className="text-center p-3 bg-white/50 rounded-xl">
               <div className="w-8 h-8 mx-auto mb-2 rounded-full bg-purple-50 flex items-center justify-center">
                 <Eye size={16} className="text-purple-600" />
               </div>
-              <p className="text-xl font-bold text-gray-900">—</p>
+              <p className="text-xl font-bold text-gray-900">{stats.views}</p>
               <p className="text-xs text-gray-500 font-medium">{t('views')}</p>
             </div>
           </div>
@@ -154,8 +165,8 @@ export default function SettingsPage() {
               key={href}
               href={href}
               className={`flex items-center gap-3 px-5 py-4 transition-colors ${highlight
-                  ? "bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100"
-                  : "hover:bg-white/40"
+                ? "bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100"
+                : "hover:bg-white/40"
                 } ${index < settingsLinks.length - 1 ? "border-b border-gray-100" : ""}`}
             >
               <div className={`w-9 h-9 rounded-full flex items-center justify-center ${highlight ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"

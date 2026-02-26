@@ -4,7 +4,7 @@ import PullToRefresh from "@/components/PullToRefresh";
 import { Suspense } from "react";
 import ListingSkeleton from "@/components/ListingSkeleton";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30; // ISR: serve cached, revalidate every 30s
 
 export default async function Home() {
   const { data: initialListings } = await getListings({ page: 1 });

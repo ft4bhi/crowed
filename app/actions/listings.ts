@@ -107,7 +107,16 @@ export async function getListingById(id: number) {
         if (!listing.length) return null;
 
         const seller = await db
-            .select()
+            .select({
+                uid: users.uid,
+                displayName: users.displayName,
+                bio: users.bio,
+                phone: users.phone,
+                whatsappNumber: users.whatsappNumber,
+                farmingExperience: users.farmingExperience,
+                profilePhoto: users.profilePhoto,
+                userRole: users.userRole,
+            })
             .from(users)
             .where(eq(users.uid, listing[0].sellerUid))
             .limit(1);
@@ -193,17 +202,113 @@ export async function createListing(formData: FormData) {
     }
 }
 
-export async function getUserListings(userId: string) {
+export async function getUserListings(userId?: string) {
     try {
+        const uid = userId || (await getAuthenticatedUid());
+        if (!uid) return [];
+
         const userListings = await db
             .select()
             .from(listings)
-            .where(eq(listings.sellerUid, userId))
+            .where(eq(listings.sellerUid, uid))
             .orderBy(desc(listings.createdAt));
 
         return userListings;
     } catch (error) {
         console.error("Error fetching user listings:", error);
         return [];
+    }
+}
+
+export async function getMyListingsStats() {
+    try {
+        const uid = await getAuthenticatedUid();
+        if (!uid) return { listed: 0, sold: 0, views: 0 };
+
+        const result = await db
+            .select({
+                listed: sql<number>`count(*) filter (where ${listings.status} = 'active')`,
+                sold: sql<number>`count(*) filter (where ${listings.status} = 'sold')`,
+                views: sql<number>`coalesce(sum(${listings.viewCount}), 0)`,
+            })
+            .from(listings)
+            .where(eq(listings.sellerUid, uid));
+
+        const row = result[0];
+        return {
+            listed: Number(row?.listed ?? 0),
+            sold: Number(row?.sold ?? 0),
+            views: Number(row?.views ?? 0),
+        };
+    } catch (error) {
+        console.error("Error fetching user stats:", error);
+        return { listed: 0, sold: 0, views: 0 };
+    }
+}
+
+export async function deleteListing(id: number) {
+    try {
+        const uid = await getAuthenticatedUid();
+        if (!uid) return { error: "You must be logged in" };
+
+        // Verify ownership
+        const existing = await db
+            .select({ sellerUid: listings.sellerUid })
+            .from(listings)
+            .where(eq(listings.id, id))
+            .limit(1);
+
+        if (!existing.length || existing[0].sellerUid !== uid) {
+            return { error: "Listing not found or unauthorized" };
+        }
+
+        await db.delete(listings).where(eq(listings.id, id));
+        revalidatePath("/");
+        revalidatePath("/settings/my-listings");
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting listing:", error);
+        return { error: "Failed to delete listing" };
+    }
+}
+
+export async function markAsSold(id: number) {
+    try {
+        const uid = await getAuthenticatedUid();
+        if (!uid) return { error: "You must be logged in" };
+
+        const existing = await db
+            .select({ sellerUid: listings.sellerUid })
+            .from(listings)
+            .where(eq(listings.id, id))
+            .limit(1);
+
+        if (!existing.length || existing[0].sellerUid !== uid) {
+            return { error: "Listing not found or unauthorized" };
+        }
+
+        await db
+            .update(listings)
+            .set({ status: "sold" })
+            .where(eq(listings.id, id));
+
+        revalidatePath("/");
+        revalidatePath("/settings/my-listings");
+        return { success: true };
+    } catch (error) {
+        console.error("Error marking listing as sold:", error);
+        return { error: "Failed to mark as sold" };
+    }
+}
+
+export async function incrementViewCount(id: number) {
+    try {
+        await db
+            .update(listings)
+            .set({ viewCount: sql`coalesce(${listings.viewCount}, 0) + 1` })
+            .where(eq(listings.id, id));
+    } catch (error) {
+        // Fire-and-forget — don't break the page if this fails
+        console.error("Error incrementing view count:", error);
     }
 }
