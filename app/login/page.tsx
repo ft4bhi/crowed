@@ -7,7 +7,6 @@ import { motion } from "framer-motion";
 import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
-import { markSessionSet } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -24,29 +23,21 @@ export default function LoginPage() {
       const user = result.user;
       const idToken = await user.getIdToken();
 
-      await fetch("/api/auth/session", {
+      // Fire-and-forget: set session cookie in background
+      fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
       });
 
-      // Signal AuthContext to skip its own duplicate session call
-      markSessionSet();
-      // Refresh server components so they pick up the new session cookie
-      router.refresh();
-
+      // Instant client-side redirect — no full page reload
       const redirectTo = searchParams.get("redirect") || "/";
-      if (result.isAdmin) {
-        router.push("/admin");
-      } else {
-        router.push(redirectTo);
-      }
+      router.push(result.isAdmin ? "/admin" : redirectTo);
     } catch (err: any) {
       console.error("Google login error:", err);
       if (err?.code !== "auth/popup-closed-by-user") {
         setError(err?.message || "Failed to sign in with Google");
       }
-    } finally {
       setLoading(false);
     }
   };

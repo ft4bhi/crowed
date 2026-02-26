@@ -44,11 +44,11 @@ export default function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col w-64 h-screen fixed inset-y-0 left-0 glass-panel border-r border-white/40 z-50 rounded-none shadow-none">
       <div className="p-6 border-b border-white/20 flex items-center gap-3">
-        <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-emerald-200">
-          O
-        </div>
+        {/* <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-emerald-200">
+          
+        </div> */}
         <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-600 text-glow">
-          Crowed
+          Moofinder
         </span>
       </div>
 

@@ -3,8 +3,6 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged } from '@/lib/firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/config';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -17,10 +15,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const unsubscribe = onAuthStateChanged(async (authUser) => {
-        if (authUser) {
-          const userDocRef = doc(firestore, 'adminemail', authUser.email as string);
+    const unsubscribe = onAuthStateChanged(async (authUser) => {
+      if (authUser && authUser.email) {
+        try {
+          // Lazy-load Firestore only when admin page is accessed
+          const { getFirestore, doc, getDoc } = await import('firebase/firestore');
+          const { firebaseApp } = await import('@/lib/firebase/config');
+          const firestore = getFirestore(firebaseApp);
+
+          const userDocRef = doc(firestore, 'adminemail', authUser.email);
           const userDoc = await getDoc(userDocRef);
 
           if (userDoc.exists()) {
@@ -29,24 +32,22 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               setIsAuthenticated(true);
               setUserRole(role);
             } else {
-              setIsAuthenticated(false);
               router.push('/login');
             }
           } else {
-            setIsAuthenticated(false);
             router.push('/login');
           }
-        } else {
-          setIsAuthenticated(false);
+        } catch {
+          console.warn('Could not verify admin status');
           router.push('/login');
         }
-        setLoading(false);
-      });
+      } else {
+        router.push('/login');
+      }
+      setLoading(false);
+    });
 
-      return () => unsubscribe();
-    };
-
-    checkAuth();
+    return () => unsubscribe();
   }, [router]);
 
   if (loading) {
@@ -60,13 +61,13 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   return (
     <div className="flex flex-col h-screen">
       <div className="flex flex-1">
-          <main className="flex-1 overflow-auto">
-            <div className="flex-1 p-4 overflow-auto">
-              {children}
-            </div>
-          </main>
-        </div>
+        <main className="flex-1 overflow-auto">
+          <div className="flex-1 p-4 overflow-auto">
+            {children}
+          </div>
+        </main>
       </div>
+    </div>
   );
 };
 

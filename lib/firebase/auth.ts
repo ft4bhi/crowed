@@ -9,8 +9,7 @@ import {
   linkWithPhoneNumber,
   PhoneAuthProvider,
 } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, firestore } from './config';
+import { auth } from './config';
 
 // ─── Auth State ───
 export function onAuthStateChanged(callback: (authUser: User | null) => void) {
@@ -32,17 +31,8 @@ export async function signInWithGoogle(): Promise<{ user: User; isAdmin: boolean
       throw new Error('Google sign-in failed');
     }
 
-    // Check admin role — default to false if Firestore is unreachable
-    let isAdmin = false;
-    try {
-      const userDocRef = doc(firestore, 'adminemail', user.email);
-      const userDoc = await getDoc(userDocRef);
-      isAdmin = userDoc.exists() && userDoc.data()?.role === 'admin';
-    } catch (firestoreError) {
-      console.warn('Could not check admin status (offline?), defaulting to regular user:', firestoreError);
-    }
-
-    return { user, isAdmin };
+    // Admin check is handled server-side via session API
+    return { user, isAdmin: false };
   } catch (error) {
     console.error('Error signing in with Google:', error);
     throw error;

@@ -3,8 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { firestore, auth } from "@/lib/firebase/config";
-import { doc, getDoc } from "firebase/firestore";
+import { auth } from "@/lib/firebase/config";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   AddAdmin,
@@ -26,12 +25,20 @@ export default function AdminPanel() {
         return;
       }
 
-      const docRef = doc(firestore, "adminemail", user.email);
-      const docSnap = await getDoc(docRef);
+      try {
+        const { getFirestore, doc, getDoc } = await import('firebase/firestore');
+        const { firebaseApp } = await import('@/lib/firebase/config');
+        const firestore = getFirestore(firebaseApp);
 
-      if (docSnap.exists()) {
-        setUserRole(docSnap.data().role);
-      } else {
+        const docRef = doc(firestore, "adminemail", user.email);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          setUserRole(docSnap.data().role);
+        } else {
+          setUserRole(null);
+        }
+      } catch {
         setUserRole(null);
       }
       setLoading(false);

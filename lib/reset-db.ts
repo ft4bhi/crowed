@@ -1,4 +1,4 @@
-import { db, pool } from "./db";
+import { db } from "./db";
 import { sql } from "drizzle-orm";
 
 async function reset() {
@@ -12,14 +12,12 @@ async function reset() {
         await db.execute(sql`DROP TABLE IF EXISTS "category_option_values" CASCADE`);
         await db.execute(sql`DROP TABLE IF EXISTS "categories" CASCADE`);
         await db.execute(sql`DROP TABLE IF EXISTS "projects" CASCADE`);
-        await db.execute(sql`DROP TABLE IF EXISTS "listings" CASCADE`); // In case it exists
+        await db.execute(sql`DROP TABLE IF EXISTS "listings" CASCADE`);
         await db.execute(sql`DROP TABLE IF EXISTS "users" CASCADE`);
 
         console.log("✅ All tables dropped.");
     } catch (err) {
         console.error("❌ Failed to drop tables:", err);
-    } finally {
-        await pool.end();
     }
 }
 

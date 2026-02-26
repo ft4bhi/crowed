@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { firestore, auth } from "@/lib/firebase/config";
-import {
-  collection,
-  doc,
-  getDoc,
-  setDoc,
-  deleteDoc,
-  getDocs,
-  Timestamp,
-} from "firebase/firestore";
+import { auth } from "@/lib/firebase/config";
+import type { Timestamp } from "firebase/firestore";
+
+// Helper: lazy-load Firestore only when admin components are rendered
+async function getFirestoreInstance() {
+  const { getFirestore } = await import('firebase/firestore');
+  const { firebaseApp } = await import('@/lib/firebase/config');
+  return getFirestore(firebaseApp);
+}
 
 export const AddAdmin = () => {
   const [email, setEmail] = useState("");
@@ -27,20 +26,22 @@ export const AddAdmin = () => {
       return;
     }
 
-    const currentUserRef = doc(firestore, "adminemail", currentUser.email!);
-    const currentUserSnap = await getDoc(currentUserRef);
-
-    if (!currentUserSnap.exists() || currentUserSnap.data().role !== "superadmin") {
-      setStatus("Not authorized.");
-      setLoading(false);
-      return;
-    }
-
     try {
+      const firestore = await getFirestoreInstance();
+      const { doc, getDoc, setDoc, deleteDoc, Timestamp: TS } = await import('firebase/firestore');
+
+      const currentUserRef = doc(firestore, "adminemail", currentUser.email!);
+      const currentUserSnap = await getDoc(currentUserRef);
+
+      if (!currentUserSnap.exists() || currentUserSnap.data().role !== "superadmin") {
+        setStatus("Not authorized.");
+        setLoading(false);
+        return;
+      }
+
       const targetRef = doc(firestore, "adminemail", email);
       const targetSnap = await getDoc(targetRef);
 
-      // If already exists, delete first
       if (targetSnap.exists()) {
         await deleteDoc(targetRef);
       }
@@ -48,7 +49,7 @@ export const AddAdmin = () => {
       await setDoc(targetRef, {
         role,
         addedBy: currentUser.email,
-        addedAt: Timestamp.now(),
+        addedAt: TS.now(),
         isActive: true,
       });
 
@@ -130,6 +131,8 @@ export const AdminList = () => {
 
   useEffect(() => {
     const fetchAdmins = async () => {
+      const firestore = await getFirestoreInstance();
+      const { collection, getDocs } = await import('firebase/firestore');
       const snap = await getDocs(collection(firestore, "adminemail"));
       const list = snap.docs.map((doc) => ({
         id: doc.id,
@@ -182,14 +185,17 @@ export const RemoveAdmin = () => {
       return;
     }
 
-    const ref = doc(firestore, "adminemail", currentUser.email!);
-    const snap = await getDoc(ref);
-    if (!snap.exists() || snap.data().role !== "superadmin") {
-      setStatus("Not authorized.");
-      return;
-    }
-
     try {
+      const firestore = await getFirestoreInstance();
+      const { doc, getDoc, setDoc, deleteDoc, Timestamp: TS } = await import('firebase/firestore');
+
+      const ref = doc(firestore, "adminemail", currentUser.email!);
+      const snap = await getDoc(ref);
+      if (!snap.exists() || snap.data().role !== "superadmin") {
+        setStatus("Not authorized.");
+        return;
+      }
+
       const removedAdmin = await getDoc(doc(firestore, "adminemail", email));
       if (!removedAdmin.exists()) {
         setStatus("Admin not found.");
@@ -201,7 +207,7 @@ export const RemoveAdmin = () => {
       await setDoc(doc(firestore, "removedadmin", email), {
         email,
         removedBy: currentUser.email,
-        removedAt: Timestamp.now(),
+        removedAt: TS.now(),
         roleAtRemoval: removedAdmin.data().role,
       });
 
@@ -268,6 +274,8 @@ export const RemovedAdminsList = () => {
 
   useEffect(() => {
     const fetchRemoved = async () => {
+      const firestore = await getFirestoreInstance();
+      const { collection, getDocs } = await import('firebase/firestore');
       const snap = await getDocs(collection(firestore, "removedadmin"));
       const list = snap.docs.map((doc) => ({
         id: doc.id,

@@ -1,4 +1,4 @@
-import { db, pool } from "./db";
+import { db } from "./db";
 import { listings, users } from "./schema";
 import { hash } from "crypto"; // just for ID gen if needed, or random
 
@@ -163,8 +163,6 @@ async function seed() {
         console.log("✅ Seeding complete!");
     } catch (error) {
         console.error("❌ Seeding failed:", error);
-    } finally {
-        pool.end();
     }
 }
 

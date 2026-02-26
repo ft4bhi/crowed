@@ -30,7 +30,7 @@ export default function SettingsPage() {
     { href: "/settings/account", label: t('accountInfo'), icon: User },
     { href: "/settings/notifications", label: t('notifications'), icon: Bell },
     { href: "/settings/language", label: t('language'), icon: Globe },
-    { href: "/settings/privacy", label: t('privacySecurity'), icon: Shield },
+    // { href: "/settings/privacy", label: t('privacySecurity'), icon: Shield },
     { href: "/settings/help", label: t('helpSupport'), icon: HelpCircle },
   ];
 
