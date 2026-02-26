@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signInWithGoogle } from "@/lib/firebase/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useLanguage();
 
   const handleGoogleLogin = async () => {
@@ -34,10 +35,11 @@ export default function LoginPage() {
       // Refresh server components so they pick up the new session cookie
       router.refresh();
 
+      const redirectTo = searchParams.get("redirect") || "/";
       if (result.isAdmin) {
         router.push("/admin");
       } else {
-        router.push("/");
+        router.push(redirectTo);
       }
     } catch (err: any) {
       console.error("Google login error:", err);
