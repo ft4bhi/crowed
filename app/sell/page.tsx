@@ -152,7 +152,7 @@ export default function SellPage() {
                                 <input type="file" accept="image/*" multiple onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
                                 <ImageIcon className={`w-10 h-10 mb-2 ${files.length > 0 ? 'text-green-600' : 'text-gray-400'}`} />
                                 <span className="font-bold text-gray-700 text-sm">{files.length > 0 ? `${files.length} Photos Selected` : "Upload Photos"}</span>
-                                <span className="text-xs text-gray-500 mt-1">Udder, diverse angles</span>
+                                <span className="text-xs text-gray-500 mt-1">cow photo</span>
                             </div>
                         </div>
                     </div>
