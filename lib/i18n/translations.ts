@@ -78,8 +78,6 @@ export const translations = {
         buffalos: "Buffalos",
         bull: "Bull",
         bulls: "Bulls",
-        maleBuffalo: "Male Buffalo",
-        maleBuffalos: "Male Buffalos",
         goat: "Goat",
         goats: "Goats",
         highYield: "High Yield",

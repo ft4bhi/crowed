@@ -45,7 +45,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
         // Fallback: Try specific mappings if camelCase fails
         const map: Record<string, string> = {
-            "Male Buffalo": "maleBuffalo",
             "HF Cross": "hfCross",
             "Red Sindhi": "redSindhi",
             "Other": "other",

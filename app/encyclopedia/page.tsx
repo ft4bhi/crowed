@@ -78,7 +78,7 @@ export default function EncyclopediaPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-neutral-900">
-                PashuMitra{" "}
+                Moofinder{" "}
                 <span className="text-emerald-600 font-light">Dashboard</span>
               </h1>
               <p className="text-xs md:text-sm text-neutral-400 font-medium mt-0.5">

@@ -35,10 +35,7 @@ export default function Feed({ initialListings }: FeedProps) {
         if (activeFilter !== "All") {
             if (activeFilter === "High Yield") currentFilters.milk = 20;
             else if (activeFilter === "Pregnant") currentFilters.pregnancy = "Yes";
-            else if (activeFilter === "Male Buffalo") {
-                currentFilters.type = ["Buffalo"];
-                // Gender logic needed if schema supports it, for now simplified
-            }
+
             else if (filters.breed?.length) {
                 // Keep existing breed filter
             } else {

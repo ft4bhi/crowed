@@ -78,7 +78,7 @@ Each listing is a **video-first card**:
 
 ### Quick Filter Chips
 
-* Type (Cow / Buffalo / Bull / Male Buffalo / Other)
+* Type (Cow / Buffalo / Bull /  / Other)
 * Lactation (Not Delivered / First / Second)
 * Breed
 * Milk Range

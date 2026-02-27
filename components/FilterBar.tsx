@@ -10,7 +10,7 @@ interface FilterBarProps {
     onFilterSelect: (filter: string) => void;
 }
 
-const filters = ["All", "Cows", "Buffalos", "Bulls", "Male Buffalo", "High Yield", "Jersey", "Pregnant"];
+const filters = ["All", "Cows", "Buffalos", "Bulls", "High Yield", "Jersey", "Pregnant"];
 
 export default function FilterBar({ onOpenFilters, activeFilter, onFilterSelect }: FilterBarProps) {
     const { t, tDynamic, language } = useLanguage();

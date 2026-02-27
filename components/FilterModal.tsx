@@ -102,7 +102,7 @@ export default function FilterModal({ isOpen, onClose, onApply }: FilterModalPro
               <section>
                 <h3 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">{t('type')}</h3>
                 <div className="space-y-2">
-                  {["Cow", "Buffalo", "Bull", "Male Buffalo", "Other"].map((type) => (
+                  {["Cow", "Buffalo", "Bull", "Other"].map((type) => (
                     <label key={type} className="flex items-center gap-3 p-3 rounded-xl glass border border-white/40 cursor-pointer active:scale-[0.99] transition-transform hover:bg-white/40">
                       <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${filters.type.includes(type) ? "bg-emerald-600 border-emerald-600" : "border-gray-400 bg-white/50"}`}>
                         {filters.type.includes(type) && <Check size={12} className="text-white" />}
