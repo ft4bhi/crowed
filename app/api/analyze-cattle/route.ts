@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
 
         logToFile("Initializing model...");
         const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash-001",
+            model: "gemini-flash-latest",
             systemInstruction: SYSTEM_PROMPT,
         });
 
